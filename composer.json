@@ -1,0 +1,20 @@
+{
+  "name": "invoice-api/php-client",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Yaroslav Lukyanov",
+      "email": "ylukyanov@openprovider.ru"
+    }
+  ],
+  "require": {
+    "codeception/codeception": "*",
+    "guzzlehttp/guzzle": "^6.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "InvoiceApi\\": "src/"
+    }
+  }
+}
