@@ -9,8 +9,10 @@
     }
   ],
   "require": {
-    "codeception/codeception": "*",
     "guzzlehttp/guzzle": "^6.2"
+  },
+  "require-dev": {
+    "codeception/codeception": "*"
   },
   "autoload": {
     "psr-4": {
