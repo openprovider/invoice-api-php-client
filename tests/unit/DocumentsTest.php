@@ -1,17 +1,13 @@
 <?php
 
-namespace Repositories;
-
 use InvoiceApi\Client;
 use InvoiceApi\Models\Document;
 use InvoiceApi\Models\DocumentAttribute;
 
 /**
- * Class DocumentRestRepositoryTest
- *
- * @package Repositories
+ * Class DocumentsTest
  */
-class DocumentRestRepositoryTest extends \Codeception\Test\Unit
+class DocumentsTest extends \Codeception\Test\Unit
 {
     /**
      * @var \UnitTester
@@ -81,7 +77,7 @@ class DocumentRestRepositoryTest extends \Codeception\Test\Unit
      */
     protected function getDocument(Client $client, $id)
     {
-        return $client->documents()->getById($id);
+        return $client->documents()->id($id)->get()->toModel(Document::class);
     }
 
     public function testImportDocument()
@@ -90,7 +86,7 @@ class DocumentRestRepositoryTest extends \Codeception\Test\Unit
 
         $client = Client::build()->setTransport($transport)->getClient();
 
-        $ids = $client->documents()->import('tests/_data/test.pdf');
+        $ids = $client->documentsImport()->post(['body' => fopen('tests/_data/test.pdf', 'r')]);
 
         $this->assertNotEmpty($ids);
     }

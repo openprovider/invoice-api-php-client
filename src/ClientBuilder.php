@@ -2,15 +2,17 @@
 
 namespace InvoiceApi;
 
+use GuzzleHttp\ClientInterface;
 use InvoiceApi\Exceptions\BuilderException;
-use InvoiceApi\Transports\Transport;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class ClientBuilder
  *
- * @method $this setTransport(Transport $transport)
+ * @method $this setTransport(ClientInterface $transport)
  * @method $this setBaseUri(string $baseUri)
  * @method $this setBearerToken(string $baseUri)
+ * @method $this setLogger(LoggerInterface $logger)
  *
  * @package InvoiceConverter
  */

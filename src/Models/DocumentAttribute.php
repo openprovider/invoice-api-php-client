@@ -2,14 +2,14 @@
 
 namespace InvoiceApi\Models;
 
-use InvoiceApi\Base\Object;
+use InvoiceApi\Base\Model;
 
 /**
  * Class DocumentAttribute
  *
  * @package InvoiceApi\Models
  */
-class DocumentAttribute extends Object
+class DocumentAttribute extends Model
 {
     /**
      * @var string

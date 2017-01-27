@@ -1,16 +1,12 @@
 <?php
 
-namespace Repositories;
-
 use InvoiceApi\Client;
 use InvoiceApi\Models\AccountInfo;
 
 /**
  * Class AccountInfoTest
- *
- * @package Endpoints
  */
-class AccountInfoRestRepositoryTest extends \Codeception\Test\Unit
+class AccountInfoTest extends \Codeception\Test\Unit
 {
     /**
      * @var \UnitTester
@@ -32,7 +28,7 @@ class AccountInfoRestRepositoryTest extends \Codeception\Test\Unit
 
         $client = Client::build()->setTransport($transport)->getClient();
 
-        $accountInfo = $client->accountInfo()->get();
+        $accountInfo = $client->accountInfo()->get()->toModel(AccountInfo::class);
 
         $this->assertNotEmpty($accountInfo);
         $this->assertInstanceOf(AccountInfo::class, $accountInfo);

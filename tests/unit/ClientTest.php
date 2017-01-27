@@ -1,6 +1,7 @@
 <?php
 use InvoiceApi\Client;
 use InvoiceApi\Exceptions\BuilderException;
+use InvoiceApi\Helpers\ArrayHelper;
 use InvoiceApi\Transports\DefaultTransport;
 
 /**
@@ -42,9 +43,12 @@ class ClientTest extends \Codeception\Test\Unit
 
         $client = Client::build()->setTransport($transport)->getClient();
 
-        $data = $client->request('GET', '/uri');
+        $data = $client->rawRequest('GET', '/uri');
 
         $this->assertNotEmpty($data);
+
+        $data = ArrayHelper::getValue($data, 'data', []);
+
         $this->assertArrayHasKey('test', $data);
         $this->assertTrue($data['test']);
     }
@@ -78,7 +82,7 @@ class ClientTest extends \Codeception\Test\Unit
             ->setBaseUri('https://httpbin.org')
             ->getClient();
 
-        $client->request('GET', '/get');
+        $client->rawRequest('GET', '/get');
 
         $request = $client->getLastRequest();
 

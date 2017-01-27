@@ -14,14 +14,18 @@ class Unit extends \Codeception\Module
     /**
      * @param array $data
      *
-     * @return ResponseInterface|object
-     * @throws \RuntimeException
+     * @param int   $statusCode
+     *
+     * @return object|ResponseInterface
      */
-    public function stubResponse(array $data)
+    public function stubResponse(array $data, $statusCode = 200)
     {
         return Stub::makeEmpty(ResponseInterface::class, [
             'getBody' => function () use ($data) {
                 return json_encode($data);
+            },
+            'getStatusCode' => function () use ($statusCode) {
+                return $statusCode;
             },
         ]);
     }
@@ -41,7 +45,7 @@ class Unit extends \Codeception\Module
             'request' => function () use ($response) {
                 return $response;
             },
-            'newRequest' => function () {
+            'createRequest' => function () {
                 return Stub::makeEmpty(RequestInterface::class);
             },
         ]);

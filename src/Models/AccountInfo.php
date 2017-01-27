@@ -2,14 +2,14 @@
 
 namespace InvoiceApi\Models;
 
-use InvoiceApi\Base\Object;
+use InvoiceApi\Base\Model;
 
 /**
  * Class AccountInfo
  *
  * @package InvoiceApi\Models
  */
-class AccountInfo extends Object
+class AccountInfo extends Model
 {
     /**
      * @var int

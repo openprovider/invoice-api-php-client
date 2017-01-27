@@ -2,20 +2,37 @@
 
 namespace InvoiceApi;
 
-use InvoiceApi\Helpers\ArrayHelper;
+use InvoiceApi\Base\Model;
+use InvoiceApi\Exceptions\TransportException;
+use InvoiceApi\Models\Response;
 use InvoiceApi\Repositories\AccountInfoRestRepository;
 use InvoiceApi\Repositories\DocumentRestRepository;
 use InvoiceApi\Transports\Transport;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Class Client
  *
+ * @method RequestBuilder id($id)
+ * @method RequestBuilder create(Model $model)
+ * @method RequestBuilder update(Model $model)
+ *
+ * @method RequestBuilder accountInfo()
+ * @method RequestBuilder documents()
+ * @method RequestBuilder documentsImport()
+ * @method RequestBuilder accurateAttributes()
+ *
  * @package InvoiceApi
  */
-class Client
+class Client implements LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     /**
      * @var Transport
      */
@@ -40,6 +57,16 @@ class Client
      * @var ResponseInterface
      */
     protected $lastResponse;
+
+    /**
+     * Client constructor.
+     *
+     * @param LoggerInterface|null $logger
+     */
+    public function __construct(LoggerInterface $logger = null)
+    {
+        $this->logger = $logger ?: new NullLogger();
+    }
 
     /**
      * @return ClientBuilder
@@ -126,11 +153,45 @@ class Client
     }
 
     /**
-     * @return AccountInfoRestRepository
+     * Sets a logger.
+     *
+     * @param LoggerInterface $logger
+     *
+     * @return $this
      */
-    public function accountInfo()
+    public function setLogger(LoggerInterface $logger)
     {
-        return new AccountInfoRestRepository($this);
+        $this->logger = $logger;
+
+        return $this;
+    }
+
+//    /**
+//     * @return AccountInfoRestRepository
+//     */
+//    public function accountInfo()
+//    {
+//        return new AccountInfoRestRepository($this);
+//    }
+
+//    /**
+//     * @return DocumentRestRepository
+//     */
+//    public function documents()
+//    {
+//        return new DocumentRestRepository($this);
+//    }
+
+    /**
+     * @param string $uri
+     * @param array  $options
+     *
+     * @return Response
+     * @throws \InvoiceApi\Exceptions\TransportException
+     */
+    public function get($uri, array $options = [])
+    {
+        return $this->request('GET', $uri, $options);
     }
 
     /**
@@ -138,17 +199,12 @@ class Client
      * @param string $uri
      * @param array  $options
      *
-     * @return array
+     * @return Response
      * @throws \InvoiceApi\Exceptions\TransportException
      */
     public function request($method, $uri, array $options = [])
     {
-        // add token to headers
-        $options['headers']['Authorization'] = sprintf('Bearer %s', $this->bearerToken);
-
-        $data = $this->rawRequest($method, $uri, $options);
-
-        return ArrayHelper::getValue($data, 'data', []);
+        return new Response($this->rawRequest($method, $uri, $options));
     }
 
     /**
@@ -157,38 +213,88 @@ class Client
      * @param array  $options
      *
      * @return array
-     * @throws \InvoiceApi\Exceptions\TransportException
+     * @throws TransportException
      */
     public function rawRequest($method, $uri, array $options = [])
     {
-        $this->lastRequest = $this->prepareRequest($method, $uri, $options);
-        $this->lastResponse = $this->transport->send($this->lastRequest, $options);
+        if ($this->baseUri) {
+            $uri = sprintf('%s%s', $this->baseUri, $uri);
+        }
 
-        return json_decode($this->lastResponse->getBody(), true);
+        if ($this->bearerToken) {
+            $options['headers']['Authorization'] = sprintf('Bearer %s', $this->bearerToken);
+        }
+
+        $this->logger->debug(sprintf('Requesting %s with method %s.', $uri, $method), ['options' => $options]);
+
+        try {
+            $this->lastRequest = $this->transport->createRequest($method, $uri, $options);
+
+            /** @noinspection ExceptionsAnnotatingAndHandlingInspection */
+            $this->lastResponse = $this->transport->send($this->lastRequest, $options);
+        } catch (\Exception $e) {
+            throw new TransportException($e->getMessage(), $e->getCode(), $e);
+        }
+
+        if ((int)floor($this->lastResponse->getStatusCode() / 100) !== 2) {
+            $this->logger->emergency(sprintf('Cannot make request to uri %s with method %s.', $uri, $method), [
+                'statusCode' => $this->lastResponse->getStatusCode(),
+            ]);
+
+            throw new TransportException($this->lastResponse->getReasonPhrase(), $this->lastResponse->getStatusCode());
+        }
+
+        $body = json_decode($this->lastResponse->getBody(), true);
+
+        $this->logger->debug(sprintf('Response %s with method %s.', $uri, $method), ['body' => $body]);
+
+        return $body;
     }
 
     /**
-     * @param string $method
      * @param string $uri
      * @param array  $options
      *
-     * @return \Psr\Http\Message\RequestInterface
+     * @return Response
+     * @throws \InvoiceApi\Exceptions\TransportException
      */
-    protected function prepareRequest($method, $uri, array $options = [])
+    public function post($uri, array $options = [])
     {
-        return $this->transport->newRequest(
-            $method,
-            sprintf('%s/%s', $this->baseUri, $uri),
-            ArrayHelper::getValue($options, 'headers', []),
-            ArrayHelper::getValue($options, 'body')
-        );
+        return $this->request('POST', $uri, $options);
     }
 
     /**
-     * @return DocumentRestRepository
+     * @param string $name
+     * @param array  $arguments
+     *
+     * @return RequestBuilder
      */
-    public function documents()
+    public function __call($name, $arguments)
     {
-        return new DocumentRestRepository($this);
+        return (new RequestBuilder($this))->$name($arguments);
+    }
+
+    /**
+     * @param string $uri
+     * @param array  $options
+     *
+     * @return Response
+     * @throws \InvoiceApi\Exceptions\TransportException
+     */
+    public function put($uri, array $options = [])
+    {
+        return $this->request('PUT', $uri, $options);
+    }
+
+    /**
+     * @param string $uri
+     * @param array  $options
+     *
+     * @return Response
+     * @throws \InvoiceApi\Exceptions\TransportException
+     */
+    public function delete($uri, array $options = [])
+    {
+        return $this->request('DELETE', $uri, $options);
     }
 }

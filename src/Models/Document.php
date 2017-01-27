@@ -2,7 +2,7 @@
 
 namespace InvoiceApi\Models;
 
-use InvoiceApi\Base\Object;
+use InvoiceApi\Base\Model;
 use InvoiceApi\Helpers\ArrayHelper;
 
 /**
@@ -10,7 +10,7 @@ use InvoiceApi\Helpers\ArrayHelper;
  *
  * @package InvoiceApi\Models
  */
-class Document extends Object
+class Document extends Model
 {
     /**
      * @var int
