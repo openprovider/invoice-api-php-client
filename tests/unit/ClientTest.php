@@ -32,6 +32,66 @@ class ClientTest extends \Codeception\Test\Unit
         Client::build()->someUndefinedMethod();
     }
 
+    public function testStubbedClientRequest()
+    {
+        $transport = $this->tester->stubTransportWithResponse($this->tester->stubResponse([
+            'data' => [
+                'test' => true,
+            ],
+        ]));
+
+        $client = Client::build()->setTransport($transport)->getClient();
+
+        $data = $client->request('GET', '/uri');
+
+        $this->assertNotEmpty($data);
+        $this->assertArrayHasKey('test', $data);
+        $this->assertTrue($data['test']);
+    }
+
+    /**
+     * @group Remote
+     */
+    public function testClientRequest()
+    {
+        $client = Client::build()
+            ->setTransport(new DefaultTransport())
+            ->setBaseUri('https://httpbin.org')
+            ->getClient();
+
+        $data = $client->rawRequest('GET', '/get');
+
+        $this->assertNotEmpty($data);
+        $this->assertArrayHasKey('headers', $data);
+        $this->assertArrayHasKey('url', $data);
+        $this->assertEquals($data['url'], 'https://httpbin.org/get');
+    }
+
+    /**
+     * @group Remote
+     */
+    public function testClientRequestBearerToken()
+    {
+        $client = Client::build()
+            ->setTransport(new DefaultTransport())
+            ->setBearerToken('test-token')
+            ->setBaseUri('https://httpbin.org')
+            ->getClient();
+
+        $client->request('GET', '/get');
+
+        $request = $client->getLastRequest();
+
+        $this->assertNotEmpty($request);
+        $this->assertNotEmpty($request->getHeaders());
+
+        $header = $request->getHeader('Authorization');
+        $header = reset($header);
+
+        $this->assertNotEmpty($header);
+        $this->assertEquals('Bearer test-token', $header);
+    }
+
     protected function _before()
     {
     }

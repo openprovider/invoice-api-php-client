@@ -4,6 +4,7 @@ namespace InvoiceApi\Transports;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Psr7\Request;
 use InvoiceApi\Exceptions\TransportException;
 use Psr\Http\Message\RequestInterface;
 
@@ -45,5 +46,19 @@ class DefaultTransport extends Client implements Transport
         } catch (GuzzleException $e) {
             throw new TransportException($e->getMessage(), $e->getCode(), $e);
         }
+    }
+
+    /**
+     * @param string $method
+     * @param string $uri
+     * @param array  $headers
+     * @param null   $body
+     * @param string $version
+     *
+     * @return RequestInterface
+     */
+    public function newRequest($method, $uri, array $headers = [], $body = null, $version = '1.1')
+    {
+        return new Request($method, $uri, $headers, $body, $version);
     }
 }

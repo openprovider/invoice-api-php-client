@@ -6,6 +6,7 @@ namespace Helper;
 
 use Codeception\Util\Stub;
 use InvoiceApi\Transports\Transport;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 class Unit extends \Codeception\Module
@@ -39,6 +40,9 @@ class Unit extends \Codeception\Module
             },
             'request' => function () use ($response) {
                 return $response;
+            },
+            'newRequest' => function () {
+                return Stub::makeEmpty(RequestInterface::class);
             },
         ]);
     }

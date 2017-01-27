@@ -41,4 +41,15 @@ interface Transport
      * @throws TransportException
      */
     public function request($method, $uri, array $options = []);
+
+    /**
+     * @param string $method
+     * @param string $uri
+     * @param array  $headers
+     * @param string $body
+     * @param string $version
+     *
+     * @return RequestInterface
+     */
+    public function newRequest($method, $uri, array $headers = [], $body = null, $version = '1.1');
 }

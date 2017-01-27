@@ -6,6 +6,8 @@ use InvoiceApi\Helpers\ArrayHelper;
 use InvoiceApi\Repositories\AccountInfoRestRepository;
 use InvoiceApi\Repositories\DocumentRestRepository;
 use InvoiceApi\Transports\Transport;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class Client
@@ -28,6 +30,16 @@ class Client
      * @var string
      */
     protected $bearerToken;
+
+    /**
+     * @var RequestInterface
+     */
+    protected $lastRequest;
+
+    /**
+     * @var ResponseInterface
+     */
+    protected $lastResponse;
 
     /**
      * @return ClientBuilder
@@ -98,6 +110,22 @@ class Client
     }
 
     /**
+     * @return RequestInterface
+     */
+    public function getLastRequest()
+    {
+        return $this->lastRequest;
+    }
+
+    /**
+     * @return ResponseInterface
+     */
+    public function getLastResponse()
+    {
+        return $this->lastResponse;
+    }
+
+    /**
      * @return AccountInfoRestRepository
      */
     public function accountInfo()
@@ -115,11 +143,45 @@ class Client
      */
     public function request($method, $uri, array $options = [])
     {
-        $response = $this->transport->request($method, sprintf('%s/%s', $this->baseUri, $uri), $options);
+        // add token to headers
+        $options['headers']['Authorization'] = sprintf('Bearer %s', $this->bearerToken);
 
-        $data = json_decode($response->getBody(), true);
+        $data = $this->rawRequest($method, $uri, $options);
 
-        return ArrayHelper::getValue($data, 'data');
+        return ArrayHelper::getValue($data, 'data', []);
+    }
+
+    /**
+     * @param string $method
+     * @param string $uri
+     * @param array  $options
+     *
+     * @return array
+     * @throws \InvoiceApi\Exceptions\TransportException
+     */
+    public function rawRequest($method, $uri, array $options = [])
+    {
+        $this->lastRequest = $this->prepareRequest($method, $uri, $options);
+        $this->lastResponse = $this->transport->send($this->lastRequest, $options);
+
+        return json_decode($this->lastResponse->getBody(), true);
+    }
+
+    /**
+     * @param string $method
+     * @param string $uri
+     * @param array  $options
+     *
+     * @return \Psr\Http\Message\RequestInterface
+     */
+    protected function prepareRequest($method, $uri, array $options = [])
+    {
+        return $this->transport->newRequest(
+            $method,
+            sprintf('%s/%s', $this->baseUri, $uri),
+            ArrayHelper::getValue($options, 'headers', []),
+            ArrayHelper::getValue($options, 'body')
+        );
     }
 
     /**
