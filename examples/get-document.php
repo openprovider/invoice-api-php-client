@@ -8,8 +8,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 $client = Client::build()
     ->setTransport(new DefaultTransport())
-    ->setBaseUri('https://invconv-stage.openprovider.nl/api/v1')
-    ->setBearerToken('123')
+    ->setBaseUri('https://invoice-api.com/api/v1')
+    ->setBearerToken('')
     ->getClient();
 
 $response = $client->documents()->id(1)->get();
