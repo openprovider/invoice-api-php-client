@@ -4,6 +4,7 @@ namespace InvoiceApi;
 
 use GuzzleHttp\ClientInterface;
 use InvoiceApi\Exceptions\BuilderException;
+use InvoiceApi\Transports\DefaultTransport;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -28,7 +29,7 @@ class ClientBuilder
      */
     protected function __construct()
     {
-        $this->client = new Client();
+        $this->client = (new Client())->setTransport(new DefaultTransport());
     }
 
     /**

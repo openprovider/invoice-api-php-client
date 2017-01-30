@@ -7,7 +7,6 @@ use InvoiceApi\Transports\DefaultTransport;
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $client = Client::build()
-    ->setTransport(new DefaultTransport())
     ->setBaseUri('https://invconv-stage.openprovider.nl/api/v1')
     ->setBearerToken('')
     ->getClient();

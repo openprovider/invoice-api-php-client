@@ -2,7 +2,6 @@
 use InvoiceApi\Client;
 use InvoiceApi\Exceptions\BuilderException;
 use InvoiceApi\Helpers\ArrayHelper;
-use InvoiceApi\Transports\DefaultTransport;
 
 /**
  * Class ClientTest
@@ -17,7 +16,6 @@ class ClientTest extends \Codeception\Test\Unit
     public function testBuildClient()
     {
         $client = Client::build()
-            ->setTransport(new DefaultTransport())
             ->setBaseUri('https://invoice-api.com/api/v1')
             ->setBearerToken('test-token')
             ->getClient();
@@ -59,7 +57,6 @@ class ClientTest extends \Codeception\Test\Unit
     public function testClientRequest()
     {
         $client = Client::build()
-            ->setTransport(new DefaultTransport())
             ->setBaseUri('https://httpbin.org')
             ->getClient();
 
@@ -77,7 +74,6 @@ class ClientTest extends \Codeception\Test\Unit
     public function testClientRequestBearerToken()
     {
         $client = Client::build()
-            ->setTransport(new DefaultTransport())
             ->setBearerToken('test-token')
             ->setBaseUri('https://httpbin.org')
             ->getClient();
